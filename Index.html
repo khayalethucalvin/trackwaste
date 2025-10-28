@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Matsapha Environmental Tracking System</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        /* Header */
+        header {
+            background: linear-gradient(135deg, #2E7D32 0%, #4CAF50 100%);
+            color: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo-icon {
+            font-size: 2.5rem;
+        }
+
+        .logo h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .logo p {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        nav {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        nav a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            transition: opacity 0.3s;
+        }
+
+        nav a:hover {
+            opacity: 0.8;
+        }
+
+        .btn-login {
+            background: white;
+            color: #2E7D32;
+            padding: 0.6rem 1.5rem;
+            border-radius: 25px;
+            font-weight: 600;
+            transition: transform 0.2s;
+        }
+
+        .btn-login:hover {
+            transform: translateY(-2px);
+        }
+
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(rgba(27, 94, 32, 0.85), rgba(46, 125, 50, 0.85)), 
+                        url('https://images.unsplash.com/photo-1611273426858-450d8e3c9fce?w=1600&q=80') center/cover;
+            color: white;
+            padding: 5rem 2rem;
+            text-align: center;
+            position: relative;
+            min-height: 500px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.3);
+            z-index: 0;
+        }
+
+        .hero-content {
+            max-width: 900px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .hero h2 {
+            font-size: 2.8rem;
+            margin-bottom: 1.5rem;
+            font-weight: 700;
+        }
+
+        .hero p {
+            font-size: 1.3rem;
+            margin-bottom: 2.5rem;
+            opacity: 0.98;
+            line-height: 1.6;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 30px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: #FF6F00;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #E65100;
+            transform: translateY(-3px);
+            box-shadow: 0 5px 20px rgba(255,111,0,0.4);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #2E7D32;
+        }
+
+        .btn-secondary:hover {
+            background: #f5f5f5;
+            transform: translateY(-3px);
+        }
+
+        /* Stats Bar */
+        .stats-bar {
+            background: white;
+            padding: 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .stats-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            text-align: center;
+        }
+
+        .stat {
+            padding: 1rem;
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #2E7D32;
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 0.95rem;
+            color: #666;
+            margin-top: 0.5rem;
+        }
+
+        /* Main Content */
+        .main-content {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+        }
+
+        /* Map Section */
+        .map-section {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .section-header h3 {
+            font-size: 1.5rem;
+            color: #2E7D32;
+        }
+
+        .filter-buttons {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 0.5rem 1rem;
+            border: 2px solid #4CAF50;
+            background: white;
+            color: #4CAF50;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .filter-btn.active {
+            background: #4CAF50;
+            color: white;
+        }
+
+        #map {
+            height: 500px;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+        }
+
+        .map-legend {
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+            font-size: 0.9rem;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        /* CO2 Tracker */
+        .co2-tracker {
+            background: linear-gradient(135deg, #FF6F00 0%, #FF9800 100%);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(255,111,0,0.3);
+        }
+
+        .co2-tracker h3 {
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
+        }
+
+        .co2-total {
+            font-size: 3rem;
+            font-weight: 700;
+            margin: 1rem 0;
+        }
+
+        .co2-unit {
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+
+        .co2-comparison {
+            background: rgba(255,255,255,0.2);
+            padding: 1rem;
+            border-radius: 10px;
+            margin-top: 1rem;
+            font-size: 0.95rem;
+        }
+
+        .co2-breakdown {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(255,255,255,0.3);
+        }
+
+        .breakdown-item {
+            text-align: center;
+        }
+
+        .breakdown-value {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .breakdown-label {
+            font-size: 0.85rem;
+            opacity: 0.9;
+            margin-top: 0.3rem;
+        }
+
+        /* Recycling Prices */
+        .recycling-prices {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 15px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+        }
+
+        .recycling-prices h3 {
+            font-size: 1.3rem;
+            color: #2E7D32;
+            margin-bottom: 1rem;
+        }
+
+        .price-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.8rem;
+            margin-bottom: 0.5rem;
+            background: #f5f5f5;
+            border-radius: 8px;
+            transition: transform 0.2s;
+        }
+
+        .price-item:hover {
+            transform: translateX(5px);
+            background: #e8f5e9;
+        }
+
+        .material-name {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .price-value {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #2E7D32;
+        }
+
+        .price-trend {
+            font-size: 0.85rem;
+            margin-left: 0.5rem;
+        }
+
+        .trend-up {
+            color: #4CAF50;
+        }
+
+        .trend-down {
+            color: #f44336;
+        }
+
+        .calculator-link {
+            display: block;
+            text-align: center;
+            padding: 0.8rem;
+            background: #2E7D32;
+            color: white;
+            border-radius: 8px;
+            text-decoration: none;
+            margin-top: 1rem;
+            font-weight: 600;
+            transition: background 0.3s;
+        }
+
+        .calculator-link:hover {
+            background: #1B5E20;
+        }
+
+        /* Leaderboard */
+        .leaderboard {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 15px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+        }
+
+        .leaderboard h3 {
+            font-size: 1.3rem;
+            color: #2E7D32;
+            margin-bottom: 1rem;
+        }
+
+        .leader-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.8rem;
+            margin-bottom: 0.5rem;
+            background: #f5f5f5;
+            border-radius: 8px;
+        }
+
+        .leader-rank {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #FF6F00;
+            min-width: 40px;
+        }
+
+        .leader-info {
+            flex: 1;
+        }
+
+        .leader-name {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .leader-location {
+            font-size: 0.85rem;
+            color: #666;
+        }
+
+        .leader-points {
+            font-weight: 700;
+            color: #2E7D32;
+        }
+
+        /* Industry Partners */
+        .industry-section {
+            background: white;
+            padding: 3rem 2rem;
+            margin-top: 2rem;
+        }
+
+        .industry-content {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .industry-section h3 {
+            text-align: center;
+            font-size: 2rem;
+            color: #2E7D32;
+            margin-bottom: 2rem;
+        }
+
+        .partner-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+        }
+
+        .partner-card {
+            background: #f5f5f5;
+            padding: 2rem;
+            border-radius: 10px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .partner-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+
+        .partner-badge {
+            width: 60px;
+            height: 60px;
+            background: #4CAF50;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+            font-size: 2rem;
+        }
+
+        .partner-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .partner-status {
+            color: #4CAF50;
+            font-size: 0.9rem;
+        }
+
+        /* Footer */
+        footer {
+            background: #1B5E20;
+            color: white;
+            padding: 3rem 2rem 1rem;
+            margin-top: 3rem;
+        }
+
+        .footer-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .footer-section h4 {
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+
+        .footer-section ul {
+            list-style: none;
+        }
+
+        .footer-section li {
+            margin-bottom: 0.5rem;
+        }
+
+        .footer-section a {
+            color: white;
+            text-decoration: none;
+            opacity: 0.8;
+            transition: opacity 0.3s;
+        }
+
+        .footer-section a:hover {
+            opacity: 1;
+        }
+
+        .footer-bottom {
+            text-align: center;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(255,255,255,0.2);
+            opacity: 0.8;
+        }
+
+        /* Responsive */
+        @media (max-width: 968px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+
+            .hero h2 {
+                font-size: 2rem;
+            }
+
+            .header-content {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            nav {
+                flex-direction: column;
+                gap: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="header-content">
+            <div class="logo">
+                <div class="logo-icon">🌍</div>
+                <div>
+                    <h1>Matsapha Environmental Tracking</h1>
+                    <p>Community-Powered Carbon Monitoring</p>
+                </div>
+            </div>
+            <nav>
+                
+                <a href="#leaderboard">Leaderboard</a>
+                <a href="#about">About</a>
+                <a href="#" class="btn-login">Login / Register</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <h2>Track. Report. Transform Matsapha.</h2>
+            <p>Join our community in monitoring burning incidents, tracking CO2 emissions, and building a sustainable future for Eswatini.</p>
+            <div class="cta-buttons">
+                <a href="#" class="btn btn-primary">🔥 Report Burning Now</a>
+                <a href="#" class="btn btn-secondary">📊 View Data</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Bar -->
+    <section class="stats-bar">
+        <div class="stats-container">
+            <div class="stat">
+                <span class="stat-number">247</span>
+                <span class="stat-label">Reports This Month</span>
+            </div>
+            <div class="stat">
+                <span class="stat-number">12.4</span>
+                <span class="stat-label">Tons CO2 Tracked</span>
+            </div>
+            <div class="stat">
+                <span class="stat-number">156</span>
+                <span class="stat-label">Active Community Monitors</span>
+            </div>
+            <div class="stat">
+                <span class="stat-number">5</span>
+                <span class="stat-label">Partner Industries</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Live Map Section -->
+        <div class="map-section" id="map">
+            <div class="section-header">
+                <h3>🔥 Live Burning Map - Last 7 Days</h3>
+                <div class="filter-buttons">
+                    <button class="filter-btn active">All</button>
+                    <button class="filter-btn">Trash</button>
+                    <button class="filter-btn">Vegetation</button>
+                    <button class="filter-btn">Industrial</button>
+                </div>
+            </div>
+            <div id="map"></div>
+            <div class="map-legend">
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #f44336;"></div>
+                    <span>Trash Burning</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #FF9800;"></div>
+                    <span>Vegetation Burning</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #9C27B0;"></div>
+                    <span>Industrial Burning</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #757575;"></div>
+                    <span>Unknown</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <!-- CO2 Tracker -->
+            <div class="co2-tracker">
+                <h3>📊 October 2025 CO2 Impact</h3>
+                <div class="co2-total">
+                    12.4<span class="co2-unit"> tons CO2</span>
+                </div>
+                <div class="co2-comparison">
+                    ≈ 52,000 km driven by an average car<br>
+                    ≈ 1,550 trees needed to offset
+                </div>
+                <div class="co2-breakdown">
+                    <div class="breakdown-item">
+                        <div class="breakdown-value">65%</div>
+                        <div class="breakdown-label">Community</div>
+                    </div>
+                    <div class="breakdown-item">
+                        <div class="breakdown-value">35%</div>
+                        <div class="breakdown-label">Industrial</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recycling Prices -->
+            <div class="recycling-prices" id="prices">
+                <h3>♻️ Today's Recycling Prices</h3>
+                <div class="price-item">
+                    <span class="material-name">Aluminum Cans</span>
+                    <span>
+                        <span class="price-value">E12/kg</span>
+                        <span class="price-trend trend-up">↑ 5%</span>
+                    </span>
+                </div>
+                <div class="price-item">
+                    <span class="material-name">Cardboard</span>
+                    <span>
+                        <span class="price-value">E2.5/kg</span>
+                        <span class="price-trend trend-down">↓ 2%</span>
+                    </span>
+                </div>
+                <div class="price-item">
+                    <span class="material-name">PET Bottles</span>
+                    <span>
+                        <span class="price-value">E4/kg</span>
+                        <span class="price-trend trend-up">↑ 8%</span>
+                    </span>
+                </div>
+                <div class="price-item">
+                    <span class="material-name">Glass Bottles</span>
+                    <span>
+                        <span class="price-value">E0.50/unit</span>
+                        <span class="price-trend">—</span>
+                    </span>
+                </div>
+                <div class="price-item">
+                    <span class="material-name">Scrap Metal</span>
+                    <span>
+                        <span class="price-value">E3/kg</span>
+                        <span class="price-trend trend-up">↑ 3%</span>
+                    </span>
+                </div>
+                <a href="#" class="calculator-link">💰 Calculate Your Earnings</a>
+            </div>
+
+            <!-- Leaderboard -->
+            <div class="leaderboard" id="leaderboard">
+                <h3>🏆 Top Community Monitors</h3>
+                <div class="leader-item">
+                    <div class="leader-rank">1</div>
+                    <div class="leader-info">
+                        <div class="leader-name">Sipho M.</div>
+                        <div class="leader-location">Ngwane Park</div>
+                    </div>
+                    <div class="leader-points">342 pts</div>
+                </div>
+                <div class="leader-item">
+                    <div class="leader-rank">2</div>
+                    <div class="leader-info">
+                        <div class="leader-name">Thandiwe N.</div>
+                        <div class="leader-location">Matsapha Town</div>
+                    </div>
+                    <div class="leader-points">289 pts</div>
+                </div>
+                <div class="leader-item">
+                    <div class="leader-rank">3</div>
+                    <div class="leader-info">
+                        <div class="leader-name">Mandla D.</div>
+                        <div class="leader-location">Industrial Area</div>
+                    </div>
+                    <div class="leader-points">267 pts</div>
+                </div>
+                <div class="leader-item">
+                    <div class="leader-rank">4</div>
+                    <div class="leader-info">
+                        <div class="leader-name">Nomsa K.</div>
+                        <div class="leader-location">Fairview</div>
+                    </div>
+                    <div class="leader-points">234 pts</div>
+                </div>
+                <div class="leader-item">
+                    <div class="leader-rank">5</div>
+                    <div class="leader-info">
+                        <div class="leader-name">Youth Analysts Team</div>
+                        <div class="leader-location">Multiple Areas</div>
+                    </div>
+                    <div class="leader-points">198 pts</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Industry Partners Section -->
+    <section class="industry-section">
+        <div class="industry-content">
+            <h3>🤝 Certified Green Industry Partners</h3>
+            <p style="text-align: center; color: #666; margin-bottom: 2rem;">
+                Companies committed to environmental transparency and reporting
+            </p>
+            <div class="partner-grid">
+                <div class="partner-card">
+                    <div class="partner-badge">✓</div>
+                    <div class="partner-name">Matsapha Textiles Ltd</div>
+                    <div class="partner-status">✅ Verified Partner</div>
+                </div>
+                <div class="partner-card">
+                    <div class="partner-badge">✓</div>
+                    <div class="partner-name">Swazi Glass Manufacturing</div>
+                    <div class="partner-status">✅ Verified Partner</div>
+                </div>
+                <div class="partner-card">
+                    <div class="partner-badge">✓</div>
+                    <div class="partner-name">Royal Swaziland Sugar</div>
+                    <div class="partner-status">✅ Verified Partner</div>
+                </div>
+                <div class="partner-card">
+                    <div class="partner-badge">?</div>
+                    <div class="partner-name">Your Company Here</div>
+                    <div class="partner-status">🔗 Become a Partner</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <div class="footer-section">
+                <h4>About</h4>
+                <ul>
+                    <li><a href="#">Our Mission</a></li>
+                    <li><a href="#">How It Works</a></li>
+                    <li><a href="#">CO2 Methodology</a></li>
+                    <li><a href="#">Team</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h4>Get Involved</h4>
+                <ul>
+                    <li><a href="#">Report Burning</a></li>
+                    <li><a href="#">Become a Monitor</a></li>
+                    <li><a href="#">Industry Partnership</a></li>
+                    <li><a href="#">Volunteer</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h4>Resources</h4>
+                <ul>
+                    <li><a href="#">Monthly Reports</a></li>
+                    <li><a href="#">Data Export</a></li>
+                    <li><a href="#">Recycling Guide</a></li>
+                    <li><a href="#">Training Materials</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h4>Contact</h4>
+                <ul>
+                    <li><a href="#">info@matsapha-env.sz</a></li>
+                    <li><a href="#">+268 XXXX XXXX</a></li>
+                    <li><a href="#">WhatsApp Reporting</a></li>
+                    <li><a href="#">Social Media</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2025 Matsapha Environmental Tracking System. Empowering communities for a cleaner future.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Initialize Map
+        const map = L.map('map').setView([-26.5225, 31.3089], 13);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Sample burning incident data
+        const burningIncidents = [
+            { lat: -26.5225, lng: 31.3089, type: 'trash', size: 'medium', date: '2025-10-27' },
+            { lat: -26.5180, lng: 31.3150, type: 'vegetation', size: 'large', date: '2025-10-26' },
+            { lat: -26.5300, lng: 31.3000, type: 'industrial', size: 'small', date: '2025-10-25' },
+            { lat: -26.5200, lng: 31.3200, type: 'trash', size: 'small', date: '2025-10-24' },
+            { lat: -26.5280, lng: 31.3120, type: 'vegetation', size: 'medium', date: '2025-10-23' },
+            { lat: -26.5150, lng: 31.3050, type: 'industrial', size: 'large', date: '2025-10-22' },
+            { lat: -26.5320, lng: 31.3180, type: 'trash', size: 'medium', date: '2025-10-21' }
+        ];
+
+        const colorMap = {
+            trash: '#f44336',
+            vegetation: '#FF9800',
+            industrial: '#9C27B0',
+            unknown: '#757575'
+        };
+
+        // Add markers to map
+        burningIncidents.forEach(incident => {
+            const circle = L.circleMarker([incident.lat, incident.lng], {
+                color: colorMap[incident.type],
+                fillColor: colorMap[incident.type],
+                fillOpacity: 0.7,
+                radius: incident.size === 'large' ? 12 : incident.size === 'medium' ? 8 : 5
+            }).addTo(map);
+
+            circle.bindPopup(`
+                <b>${incident.type.charAt(0).toUpperCase() + incident.type.slice(1)} Burning</b><br>
+                Size: ${incident.size}<br>
+                Date: ${incident.date}<br>
+                <a href="#" style="color: #2E7D32;">View Details</a>
+            `);
+        });
+
+        // Filter functionality
+        const filterButtons = document.querySelectorAll('.filter-btn');
+        filterButtons.forEach(btn => {
+            btn.addEventListener('click', function() {
+                filterButtons.forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                // Filter logic would go here
+            });
+        });
+    </script>
+</body>
+</html>
